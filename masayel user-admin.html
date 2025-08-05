@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ইসলামী মাসয়ালা মাসায়েল</title>
+    <style>
+        body { font-family: 'Kalpurush', 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 850px; margin: auto; background: #fff; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 10px; }
+        .hidden { display: none !important; }
+        
+        /* Auth Section */
+        #auth-container h1 { text-align: center; color: #0056b3; }
+        .auth-form { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .auth-form input { padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        .auth-form button { background-color: #007bff; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .auth-form button:hover { background-color: #0056b3; }
+        .toggle-auth { text-align: center; color: #007bff; cursor: pointer; text-decoration: underline; }
+        
+        /* App Section */
+        #app-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        #app-header h1 { margin: 0; color: #007bff; font-size: 24px; }
+        #app-header #user-info { font-size: 14px; color: #555; }
+        #app-header #logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+
+        /* Admin Panel */
+        #admin-panel { background: #e9f5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        #admin-panel h2 { margin-top: 0; text-align: center; color: #0056b3; }
+        #masala-form input, #masala-form textarea { width: calc(100% - 24px); padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        #masala-form button { width: 100%; }
+        #referral-section { margin-top: 20px; text-align: center; }
+        #referral-code-display { font-weight: bold; color: #28a745; background: #e4f8e9; padding: 10px; border-radius: 5px; margin-top: 10px; }
+
+        /* User View */
+        #search-input { width: calc(100% - 24px); padding: 12px; border-radius: 25px; border: 1px solid #ccc; margin-bottom: 20px; font-size: 16px; }
+        .masala-item { border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 15px; }
+        .masala-item:last-child { border-bottom: none; }
+        .masala-question { font-weight: bold; font-size: 18px; cursor: pointer; }
+        .masala-answer { padding-left: 20px; margin-top: 10px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .masala-item.active .masala-answer { max-height: 1000px; /* Large enough for content */ }
+        .admin-actions button { margin-right: 10px; background: #ffc107; color: #333; border: none; padding: 5px 10px; font-size: 12px; border-radius: 4px; cursor: pointer; }
+        .admin-actions .delete-btn { background: #ef4444; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Authentication Section -->
+        <div id="auth-container">
+            <div id="login-view">
+                <h1>লগইন করুন</h1>
+                <form id="login-form" class="auth-form">
+                    <input type="email" id="login-email" placeholder="ই-মেইল" required>
+                    <input type="password" id="login-password" placeholder="পাসওয়ার্ড" required>
+                    <button type="submit">লগইন</button>
+                </form>
+                <p class="toggle-auth" onclick="toggleViews()">অ্যাকাউন্ট নেই? সাইন আপ করুন।</p>
+            </div>
+            <div id="signup-view" class="hidden">
+                <h1>নতুন অ্যাকাউন্ট তৈরি করুন</h1>
+                <form id="signup-form" class="auth-form">
+                    <input type="email" id="signup-email" placeholder="ই-মেইল" required>
+                    <input type="password" id="signup-password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" required>
+                    <input type="text" id="referral-code" placeholder="রেফারেল কোড (শুধুমাত্র অ্যাডমিনদের জন্য)">
+                    <button type="submit">সাইন আপ</button>
+                </form>
+                <p class="toggle-auth" onclick="toggleViews()">অ্যাকাউন্ট আছে? লগইন করুন।</p>
+            </div>
+        </div>
+
+        <!-- Main App Section -->
+        <div id="app-container" class="hidden">
+            <header id="app-header">
+                <h1>মাসয়ালা মাসায়েল</h1>
+                <div>
+                    <span id="user-info"></span>
+                    <button id="logout-btn">লগ আউট</button>
+                </div>
+            </header>
+
+            <!-- Admin Panel (অ্যাডমিনদের জন্য) -->
+            <div id="admin-panel" class="hidden">
+                <h2>অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+                <form id="masala-form">
+                    <input type="hidden" id="edit-id">
+                    <input type="text" id="question-input" placeholder="প্রশ্ন" required>
+                    <textarea id="answer-input" rows="4" placeholder="উত্তর" required></textarea>
+                    <button type="submit" class="auth-form button">মাসয়ালা সংরক্ষণ করুন</button>
+                </form>
+                <div id="referral-section">
+                    <button id="generate-referral-btn">নতুন অ্যাডমিন রেফারেল কোড তৈরি করুন</button>
+                    <div id="referral-code-display" class="hidden"></div>
+                </div>
+            </div>
+
+            <!-- User View (সকলের জন্য) -->
+            <div id="user-view">
+                <input type="text" id="search-input" placeholder="প্রশ্ন খুঁজুন...">
+                <div id="masala-list">লোড হচ্ছে...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // আপনার Firebase প্রোজেক্টের কনফিগারেশন এখানে যোগ করুন
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJnOakLnkzYFLbDtPFwlLCOrptbzQz80Y",
+            authDomain: "masayel-app-user-admin.firebaseapp.com",
+            databaseURL: "https://masayel-app-user-admin-default-rtdb.firebaseio.com",
+            projectId: "masayel-app-user-admin",
+            storageBucket: "masayel-app-user-admin.appspot.com",
+            messagingSenderId: "459722687939",
+            appId: "1:459722687939:web:110ef4173ca5cbb0e0a976",
+            measurementId: "G-9BHB6F6PXY"
+        };
+
+        // Firebase শুরু করুন
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // DOM Elements
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        const loginView = document.getElementById('login-view');
+        const signupView = document.getElementById('signup-view');
+        const adminPanel = document.getElementById('admin-panel');
+        const userInfo = document.getElementById('user-info');
+        const masalaList = document.getElementById('masala-list');
+        const searchInput = document.getElementById('search-input');
+
+        let currentUser = null; // বর্তমান ব্যবহারকারীর তথ্য রাখার জন্য
+
+        // Auth State Listener: ব্যবহারকারী লগইন বা লগআউট করলে এটি কাজ করবে
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // ব্যবহারকারী লগইন করেছেন
+                db.ref('users/' + user.uid).once('value').then(snapshot => {
+                    currentUser = { uid: user.uid, email: user.email, role: snapshot.val().role };
+                    updateUIForUser();
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    loadMasalas();
+                });
+            } else {
+                // ব্যবহারকারী লগআউট করেছেন
+                currentUser = null;
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        });
+
+        // UI আপডেট করার ফাংশন
+        function updateUIForUser() {
+            if (currentUser) {
+                userInfo.textContent = `${currentUser.email} (${currentUser.role})`;
+                if (currentUser.role === 'admin') {
+                    adminPanel.classList.remove('hidden');
+                } else {
+                    adminPanel.classList.add('hidden');
+                }
+            }
+        }
+
+        // লগইন এবং সাইনআপ ভিউ পরিবর্তন
+        function toggleViews() {
+            loginView.classList.toggle('hidden');
+            signupView.classList.toggle('hidden');
+        }
+
+        // সাইনআপ হ্যান্ডলার
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const referralCode = document.getElementById('referral-code').value;
+            
+            let role = 'user'; // ডিফল্ট ভূমিকা
+
+            try {
+                // যদি রেফারেল কোড দেওয়া হয়, তবে তা ভেরিফাই করুন
+                if (referralCode) {
+                    const snapshot = await db.ref('referralCodes/' + referralCode).once('value');
+                    if (snapshot.exists() && snapshot.val() === true) {
+                        role = 'admin'; // কোড সঠিক হলে ভূমিকা অ্যাডমিন হবে
+                    } else {
+                        alert('ভুল রেফারেল কোড। আপনি সাধারণ ইউজার হিসেবে নিবন্ধিত হবেন।');
+                    }
+                }
+                
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // ডাটাবেসে ব্যবহারকারীর ভূমিকা সংরক্ষণ করুন
+                await db.ref('users/' + user.uid).set({ email: user.email, role: role });
+
+                // যদি অ্যাডমিন হিসেবে সাইন আপ হয়, রেফারেল কোডটি মুছে ফেলুন
+                if (role === 'admin') {
+                    await db.ref('referralCodes/' + referralCode).remove();
+                    alert('অ্যাডমিন হিসেবে আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!');
+                }
+
+            } catch (error) {
+                alert('ত্রুটি: ' + error.message);
+            }
+        });
+
+        // লগইন হ্যান্ডলার
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            auth.signInWithEmailAndPassword(email, password).catch(error => alert('ত্রুটি: ' + error.message));
+        });
+
+        // লগআউট হ্যান্ডলার
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // মাসয়ালা লোড করার ফাংশন
+        function loadMasalas() {
+            db.ref('masalas').on('value', snapshot => {
+                masalaList.innerHTML = '';
+                if (!snapshot.exists()) {
+                    masalaList.innerHTML = '<p>এখনো কোনো মাসয়ালা যোগ করা হয়নি।</p>';
+                    return;
+                }
+                snapshot.forEach(childSnapshot => {
+                    const id = childSnapshot.key;
+                    const masala = childSnapshot.val();
+                    const item = document.createElement('div');
+                    item.className = 'masala-item';
+                    item.dataset.question = masala.question; // সার্চ করার জন্য
+                    item.innerHTML = `
+                        <div class="masala-question">${masala.question}</div>
+                        <div class="masala-answer"><p>${masala.answer.replace(/\n/g, '<br>')}</p></div>
+                        ${currentUser && currentUser.role === 'admin' ? 
+                        `<div class="admin-actions">
+                            <button onclick="editMasala('${id}', \`${masala.question}\`, \`${masala.answer}\`)">সম্পাদনা</button>
+                            <button class="delete-btn" onclick="deleteMasala('${id}')">মুছুন</button>
+                        </div>` : ''}
+                    `;
+                    masalaList.appendChild(item);
+                });
+            });
+        }
+
+        // মাসয়ালা প্রশ্ন-উত্তর টগল (accordion)
+        masalaList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('masala-question')) {
+                e.target.parentElement.classList.toggle('active');
+            }
+        });
+        
+        // মাসয়ালা সংরক্ষণ (নতুন ও সম্পাদন)
+        document.getElementById('masala-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const question = document.getElementById('question-input').value;
+            const answer = document.getElementById('answer-input').value;
+            const editId = document.getElementById('edit-id').value;
+
+            if (editId) {
+                // Update
+                db.ref('masalas/' + editId).update({ question, answer })
+                    .then(() => alert('মাসয়ালা আপডেট হয়েছে!'))
+                    .catch(error => alert(error.message));
+            } else {
+                // Create
+                db.ref('masalas').push({ question, answer })
+                    .then(() => alert('মাসয়ালা যোগ হয়েছে!'))
+                    .catch(error => alert(error.message));
+            }
+            e.target.reset();
+            document.getElementById('edit-id').value = '';
+        });
+
+        // মাসয়ালা সম্পাদনা
+        window.editMasala = (id, question, answer) => {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('question-input').value = question;
+            document.getElementById('answer-input').value = answer;
+            adminPanel.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // মাসয়ালা মুছে ফেলা
+        window.deleteMasala = (id) => {
+            if (confirm('আপনি কি নিশ্চিতভাবে এই মাসয়ালাটি মুছে ফেলতে চান?')) {
+                db.ref('masalas/' + id).remove();
+            }
+        };
+
+        // রেফারেল কোড তৈরি
+        document.getElementById('generate-referral-btn').addEventListener('click', () => {
+            const code = 'ADMIN-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            db.ref('referralCodes/' + code).set(true).then(() => {
+                const display = document.getElementById('referral-code-display');
+                display.textContent = `আপনার নতুন রেফারেল কোড: ${code}`;
+                display.classList.remove('hidden');
+            });
+        });
+        
+        // সার্চ ফাংশন
+        searchInput.addEventListener('keyup', () => {
+            const filter = searchInput.value.toLowerCase();
+            const items = masalaList.getElementsByClassName('masala-item');
+            for (let item of items) {
+                if (item.dataset.question.toLowerCase().includes(filter)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
